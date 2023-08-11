@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:intl/intl.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:weather_app_v2_proj/extensions.dart';
 import 'package:weather_app_v2_proj/model/daily_weather.model.dart';
@@ -12,6 +11,8 @@ import 'package:weather_app_v2_proj/service/get_current_weather.dart';
 import 'package:weather_app_v2_proj/service/get_today_weather.dart';
 import 'package:weather_app_v2_proj/service/get_weekly_weather.dart';
 import 'package:weather_app_v2_proj/ui/current_screen.dart';
+import 'package:weather_app_v2_proj/ui/today_screen.dart';
+import 'package:weather_app_v2_proj/ui/weekly_screen.dart';
 
 class WeatherApp extends StatefulWidget {
   const WeatherApp({super.key});
@@ -137,38 +138,6 @@ class _WeatherAppState extends State<WeatherApp> {
 
   @override
   Widget build(BuildContext context) {
-    var todayScreen = tabScreen([
-      _location.name,
-      _location.region,
-      _location.country,
-    ],
-        extraWidget: dataColumn(combineList([
-          _dailyWeather.time.map((e) => DateFormat('HH:mm').format(e)).toList(),
-          _dailyWeather.temperature
-              .map((e) => e.toTemperatureFormat())
-              .toList(),
-          _dailyWeather.weathercode.map((e) => e.currentWeather()).toList(),
-          _dailyWeather.windspeed.map((e) => e.toWindSpeedFormat()).toList()
-        ])));
-
-    var weeklyScreen = tabScreen([
-      _location.name,
-      _location.region,
-      _location.country,
-    ],
-        extraWidget: dataColumn(combineList([
-          _weeklyWeather.time
-              .map((e) => DateFormat('dd/MM/yyyy').format(e))
-              .toList(),
-          _weeklyWeather.minTemperature
-              .map((e) => e.toTemperatureFormat())
-              .toList(),
-          _weeklyWeather.maxTemperature
-              .map((e) => e.toTemperatureFormat())
-              .toList(),
-          _weeklyWeather.weatherCode.map((e) => e.currentWeather()).toList(),
-        ])));
-
     return DefaultTabController(
       length: 3,
       child: Scaffold(
@@ -204,27 +173,32 @@ class _WeatherAppState extends State<WeatherApp> {
                     itemCount: _locations.length,
                     itemBuilder: (BuildContext context, int index) {
                       return ListTile(
-                          title: Row(
-                            children: [
-                              const Icon(Icons.apartment_rounded),
-                              Padding(
-                                padding: const EdgeInsets.only(left: 8),
-                                child: RichText(
-                                  text: TextSpan(
-                                      style: const TextStyle(
-                                        color: Colors.black,
-                                      ),
-                                      children: [
-                                        TextSpan(
-                                            text: _locations[index].name,
-                                            style: const TextStyle(
-                                                fontWeight: FontWeight.bold)),
-                                        TextSpan(
-                                            text: _locations[index].toString()),
-                                      ]),
+                          title: SingleChildScrollView(
+                            scrollDirection: Axis.horizontal,
+                            child: Row(
+                              children: [
+                                const Icon(Icons.apartment_rounded),
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 8),
+                                  child: RichText(
+                                    overflow: TextOverflow.ellipsis,
+                                    maxLines: 1,
+                                    text: TextSpan(
+                                        style: const TextStyle(
+                                            color: Colors.black),
+                                        children: [
+                                          TextSpan(
+                                              text: _locations[index].name,
+                                              style: const TextStyle(
+                                                  fontWeight: FontWeight.bold)),
+                                          TextSpan(
+                                            text: _locations[index].toString(),
+                                          ),
+                                        ]),
+                                  ),
                                 ),
-                              ),
-                            ],
+                              ],
+                            ),
                           ),
                           onTap: () => selectLocation(_locations[index]));
                     },
@@ -232,8 +206,8 @@ class _WeatherAppState extends State<WeatherApp> {
                 : TabBarView(
                     children: [
                       currentScreen(_location, _weather),
-                      todayScreen,
-                      weeklyScreen,
+                      todayScreen(_location, _dailyWeather),
+                      weeklyScreen(_location, _weeklyWeather)
                     ],
                   ),
           ],
@@ -259,67 +233,6 @@ class _WeatherAppState extends State<WeatherApp> {
       ),
     );
   }
-}
-
-Widget tabScreen(List<String> texts, {Widget? extraWidget}) {
-  texts.removeWhere((element) => element.trim().isEmpty);
-  return Center(
-    child: SingleChildScrollView(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          ...texts.map(
-            (text) => Padding(
-              padding: const EdgeInsets.only(left: 16, right: 16),
-              child: Text(text),
-            ),
-          ),
-          if (extraWidget != null) extraWidget
-        ],
-      ),
-    ),
-  );
-}
-
-Widget dataRow(List<dynamic> list) {
-  return Padding(
-    padding: const EdgeInsets.all(8.0),
-    child: Row(
-      mainAxisSize: MainAxisSize.max,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: list
-          .map((e) => Text(
-                e.toString(),
-                textAlign: TextAlign.center,
-              ))
-          .toList(),
-    ),
-  );
-}
-
-Widget dataColumn(List<List<dynamic>> list) {
-  return Column(
-    children: list.map((e) => dataRow(e)).toList(),
-  );
-}
-
-List<List<dynamic>> combineList(List<List<dynamic>> lists) {
-  if (lists.isEmpty) {
-    return [];
-  }
-
-  int length = lists[0].length;
-  List<List<dynamic>> combinedList = [];
-
-  for (int i = 0; i < length; i++) {
-    List<dynamic> combinedElement = [];
-    for (var list in lists) {
-      combinedElement.add(list[i]);
-    }
-    combinedList.add(combinedElement);
-  }
-
-  return combinedList;
 }
 
 Future<void> showAlert(BuildContext context, String title, String text,
