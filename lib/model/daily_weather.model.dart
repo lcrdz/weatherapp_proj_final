@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:weather_app_v2_proj/extensions.dart';
+import 'package:weather_app_v2_proj/ui/temperature_chart.dart';
 
 class DailyWeather {
   List<DateTime> time;
@@ -49,6 +50,12 @@ extension Converter on DailyWeather {
               temperature: temperature[i].toTemperatureFormat(),
               windSpeed: windspeed[i].toWindSpeedFormat(),
             ))
+        .toList();
+  }
+
+  List<WeatherChartData> toChartData() {
+    return temperature
+        .mapIndexed((index, element) => WeatherChartData(element, time[index]))
         .toList();
   }
 }

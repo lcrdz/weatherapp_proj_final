@@ -2,6 +2,7 @@ import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:weather_app_v2_proj/extensions.dart';
+import 'package:weather_app_v2_proj/ui/temperature_chart.dart';
 
 class WeeklyWeather {
   final List<DateTime> time;
@@ -49,6 +50,18 @@ extension Converter on WeeklyWeather {
               maxTemperature: maxTemperature[i].toTemperatureFormat(),
               minTemperature: minTemperature[i].toTemperatureFormat(),
             ))
+        .toList();
+  }
+
+  List<WeatherChartData> toMaxChartData() {
+    return maxTemperature
+        .mapIndexed((index, element) => WeatherChartData(element, time[index]))
+        .toList();
+  }
+
+  List<WeatherChartData> toMinChartData() {
+    return minTemperature
+        .mapIndexed((index, element) => WeatherChartData(element, time[index]))
         .toList();
   }
 }
